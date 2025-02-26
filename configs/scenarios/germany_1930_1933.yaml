@@ -1,0 +1,107 @@
+version: "0.1"
+seed: 19300101
+
+world:
+  dt: 1.0
+  steps: 48                 # "months"
+  topology:
+    kind: graph
+    graph:
+      n: 2000
+      generator: watts_strogatz
+      k: 12
+      beta: 0.25
+
+agents:
+  n: 2000
+  state_model:
+    belief_dim: 4
+    init:
+      kind: clusters
+      clusters:
+        k: 5
+        spread: 0.9
+  dynamics:
+    reinforcement: 0.035
+    decay: 0.012
+    noise: 0.020
+    confirmation_bias: 0.060
+    isolation_sensitivity: 0.070
+    violence_risk_gain: 0.030
+
+institutions:
+  - id: "weimar_state"
+    kind: state
+    params:
+      legitimacy: 0.45
+      policing_friction: 0.10
+      emergency_powers: 0.12
+      trust_floor: 0.20
+
+  - id: "fragmented_media"
+    kind: media
+    params:
+      fragmentation: 0.75
+      amplification_volatility: 0.35
+      rumor_gain: 0.20
+      correction_latency: 0.60
+
+  - id: "economic_shock"
+    kind: market
+    params:
+      scarcity_index: 0.80
+      unemployment_pressure: 0.75
+      volatility: 0.65
+      panic_susceptibility: 0.55
+
+  - id: "radical_party_A"
+    kind: party
+    params:
+      coherence_strength: 0.85
+      recruitment_rate: 0.06
+      propaganda_budget: 0.70
+      legitimacy_pull: 0.35
+      violence_threshold: 0.55
+      exploit:
+        scarcity_weight: 0.60
+        humiliation_weight: 0.55
+        isolation_weight: 0.40
+
+  - id: "democratic_stabilizer"
+    kind: party
+    params:
+      coherence_strength: 0.55
+      recruitment_rate: 0.03
+      propaganda_budget: 0.30
+      legitimacy_pull: 0.55
+      violence_threshold: 0.15
+      exploit:
+        scarcity_weight: 0.10
+        humiliation_weight: 0.10
+        isolation_weight: 0.15
+
+bots:
+  enabled: true
+  mode: llm_controller
+  budget:
+    max_actions_per_step: 30
+    max_edge_weight_delta: 0.12
+
+metrics:
+  track:
+    - cluster_count
+    - largest_cluster_mass
+    - polarization_index
+    - isolation_index
+    - violence_risk_index
+    - legitimacy_index
+    - rumor_R
+
+rules:
+  invariants:
+    - "no_persuasion"
+    - "no_targeting_individuals"
+    - "topology_only_actions"
+    - "audit_all_actions"
+
+

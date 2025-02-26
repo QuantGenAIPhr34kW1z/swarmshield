@@ -1,0 +1,178 @@
+# =============================================================================
+# DDR 1989: The Fall of the Berlin Wall
+# =============================================================================
+#
+# COUNTERFACTUAL QUESTION:
+#   Was it possible to prevent the fall of the Berlin Wall?
+#
+# HISTORICAL CONTEXT:
+#   - Mass emigration via Hungary (May 1989) and Czechoslovakia
+#   - Monday demonstrations in Leipzig (September-November 1989)
+#   - Gorbachev's non-intervention policy ("Sinatra Doctrine")
+#   - SED leadership crisis (Honecker replaced by Krenz)
+#   - Economic stagnation vs visible West German prosperity
+#   - Fall of Wall: November 9, 1989
+#
+# INTERVENTION HYPOTHESIS:
+#   Could earlier economic reforms, controlled media opening, or different
+#   Soviet policy have stabilized the DDR without full collapse?
+#
+# BELIEF DIMENSIONS:
+#   0: Trust in SED/State (negative = distrust)
+#   1: Desire for reunification (positive = pro-reunification)
+#   2: Economic grievance (positive = dissatisfied)
+#   3: Fear of state repression (positive = afraid)
+#
+# =============================================================================
+
+version: "0.1"
+seed: 19890509  # May 9, 1989 - Hungary opens border
+
+world:
+  dt: 1.0
+  steps: 52                    # ~weeks from May to November 1989
+  parallel: true
+  topology:
+    kind: graph
+    graph:
+      n: 2500                  # DDR population ~16M, scaled
+      generator: watts_strogatz
+      k: 8                     # Tight-knit communities (work brigades, housing blocks)
+      beta: 0.15               # Low rewiring - controlled society
+
+agents:
+  n: 2500
+  state_model:
+    belief_dim: 4
+    init:
+      kind: clusters
+      clusters:
+        k: 4                   # Party loyalists, dissidents, passive majority, church networks
+        spread: 0.7
+  dynamics:
+    reinforcement: 0.025       # Moderate echo chambers
+    decay: 0.008               # Slow belief decay
+    noise: 0.015               # Limited information noise (controlled media)
+    confirmation_bias: 0.050   # Strong in-group thinking
+    isolation_sensitivity: 0.080  # High - isolated individuals radicalize
+    violence_risk_gain: 0.015  # Low - peaceful revolution character
+  types:
+    normal: 0.55               # Silent majority
+    stubborn: 0.20             # Party hardliners and committed dissidents
+    influencer: 0.08           # Church leaders, intellectual dissidents
+    contrarian: 0.07           # Those playing both sides
+    passive: 0.10              # Apolitical citizens
+
+institutions:
+  # The SED State - decreasing legitimacy
+  - id: "sed_state"
+    kind: state
+    params:
+      legitimacy: 0.35         # Already low by 1989
+      policing_friction: 0.25  # Stasi surveillance high
+      emergency_powers: 0.40   # Capable but hesitant to use
+      trust_floor: 0.10        # Very low trust minimum
+
+  # State-controlled media (ADN, Neues Deutschland)
+  - id: "ddr_media"
+    kind: media
+    params:
+      fragmentation: 0.20      # Centralized control
+      amplification_volatility: 0.15  # Consistent messaging
+      rumor_gain: 0.10         # Attempts to suppress rumors
+      correction_latency: 0.80  # Slow response to events
+
+  # West German media influence (ARD/ZDF reception)
+  - id: "west_media_penetration"
+    kind: media
+    params:
+      fragmentation: 0.65      # Multiple West German channels
+      amplification_volatility: 0.45  # Dynamic coverage
+      rumor_gain: 0.35         # Reports on emigration, protests
+      correction_latency: 0.20  # Fast news cycle
+
+  # Economic stagnation
+  - id: "ddr_economy"
+    kind: market
+    params:
+      scarcity_index: 0.60     # Consumer goods shortages
+      unemployment_pressure: 0.15  # Officially zero, hidden underemployment
+      volatility: 0.25         # Stable but stagnant
+      panic_susceptibility: 0.40  # Fear of complete collapse
+
+  # SED Party apparatus
+  - id: "sed_party"
+    kind: party
+    params:
+      coherence_strength: 0.50  # Fracturing leadership
+      recruitment_rate: 0.01    # Declining membership
+      propaganda_budget: 0.60   # Still significant
+      legitimacy_pull: 0.25     # Weak appeal
+      violence_threshold: 0.70  # Hesitant to use force (Chinese option rejected)
+
+  # Opposition movement (Neues Forum, churches)
+  - id: "opposition_movement"
+    kind: party
+    params:
+      coherence_strength: 0.45  # Loose coalition
+      recruitment_rate: 0.08    # Rapidly growing
+      propaganda_budget: 0.15   # Limited resources
+      legitimacy_pull: 0.60     # High moral authority
+      violence_threshold: 0.10  # Committed to non-violence
+
+  # Soviet Union under Gorbachev
+  - id: "soviet_influence"
+    kind: foreign_actor
+    params:
+      intervention_threshold: 0.90  # Will NOT intervene (Sinatra Doctrine)
+      amplification_bias: -0.20     # Actually supports reform
+      destabilization_rate: 0.00    # No active destabilization
+      disinformation_level: 0.05    # Minimal
+
+bots:
+  enabled: true
+  mode: adaptive              # Test different intervention strategies
+  budget:
+    max_actions_per_step: 35
+    max_edge_weight_delta: 0.15
+
+metrics:
+  track:
+    - cluster_count
+    - largest_cluster_mass
+    - polarization_index
+    - isolation_index
+    - violence_risk_index
+    - legitimacy_index
+    - rumor_r
+    - cascade_risk
+    - type_entropy
+
+rules:
+  invariants:
+    - "no_persuasion"
+    - "no_targeting_individuals"
+    - "topology_only_actions"
+    - "audit_all_actions"
+
+# =============================================================================
+# ANALYSIS NOTES:
+#
+# Key tipping points to observe:
+# 1. t=0-10: Emigration wave begins, information spreads
+# 2. t=15-25: Monday demonstrations grow
+# 3. t=30-40: Leadership crisis, Krenz replaces Honecker
+# 4. t=45-52: Wall falls or stabilization achieved?
+#
+# Counterfactual interventions to test:
+# - Early economic reforms (reduce scarcity_index)
+# - Controlled media opening (adjust media parameters)
+# - Different Soviet signaling (modify foreign_actor)
+# - Earlier leadership change (modify sed_party coherence)
+#
+# Success metrics for "prevention":
+# - legitimacy_index > 0.40 at end
+# - violence_risk_index < 0.30
+# - polarization_index < 0.50
+# - No cascade events above 10% of population
+# =============================================================================

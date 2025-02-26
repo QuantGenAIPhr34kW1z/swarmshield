@@ -1,0 +1,212 @@
+# =============================================================================
+# USSR 1985-1991: Perestroika - The Chinese Path Not Taken
+# =============================================================================
+#
+# COUNTERFACTUAL QUESTION:
+#   Could the USSR have followed the Chinese model - stable economic
+#   liberalization without political collapse?
+#
+# HISTORICAL CONTEXT:
+#   - Gorbachev becomes General Secretary (March 1985)
+#   - Glasnost (openness) and Perestroika (restructuring) launched
+#   - Nationalist movements emerge in Baltic states, Caucasus, Ukraine
+#   - August 1991 coup attempt fails
+#   - USSR dissolves December 1991
+#
+# CHINESE COMPARISON:
+#   - Deng Xiaoping's reforms began 1978
+#   - Economic liberalization WITHOUT political opening
+#   - Tiananmen 1989: Suppressed political challenge
+#   - CCP maintained control while economy grew
+#
+# INTERVENTION HYPOTHESIS:
+#   What if Gorbachev had pursued economic reform BEFORE political opening?
+#   What if nationalist movements were addressed earlier?
+#   What if hardliners had been managed differently?
+#
+# BELIEF DIMENSIONS:
+#   0: Support for Communist Party (negative = opposition)
+#   1: Nationalist sentiment (positive = independence desire)
+#   2: Economic reform support (positive = pro-market)
+#   3: Democratic aspiration (positive = wants democracy)
+#
+# =============================================================================
+
+version: "0.1"
+seed: 19850311  # March 11, 1985 - Gorbachev becomes General Secretary
+
+world:
+  dt: 1.0
+  steps: 78                    # ~months from March 1985 to December 1991
+  parallel: true
+  topology:
+    kind: graph
+    graph:
+      n: 3000                  # USSR ~290M, scaled by republic representation
+      generator: watts_strogatz
+      k: 6                     # Lower connectivity - vast territory, diverse republics
+      beta: 0.20               # Some cross-republic connections
+
+agents:
+  n: 3000
+  state_model:
+    belief_dim: 4
+    init:
+      kind: clusters
+      clusters:
+        k: 6                   # Russian core, Baltics, Ukraine, Caucasus, Central Asia, hardliners
+        spread: 1.1            # High variance - diverse republics
+  dynamics:
+    reinforcement: 0.030       # Moderate reinforcement
+    decay: 0.010               # Slow decay of beliefs
+    noise: 0.025               # Glasnost increases information flow
+    confirmation_bias: 0.055   # Strong ethnic/national in-groups
+    isolation_sensitivity: 0.075
+    violence_risk_gain: 0.025  # Some ethnic violence risk
+  types:
+    normal: 0.50
+    stubborn: 0.25             # Hardliners and committed nationalists
+    influencer: 0.10           # Reformers, nationalist leaders
+    contrarian: 0.08           # Opportunists
+    passive: 0.07              # Apolitical
+
+institutions:
+  # The Soviet State
+  - id: "soviet_state"
+    kind: state
+    params:
+      legitimacy: 0.50         # Still functional in 1985
+      policing_friction: 0.35  # KGB active but constrained
+      emergency_powers: 0.55   # Significant but declining
+      trust_floor: 0.15
+
+  # Central Soviet media (Pravda, TASS)
+  - id: "soviet_media"
+    kind: media
+    params:
+      fragmentation: 0.25      # Centralized initially
+      amplification_volatility: 0.30  # Glasnost increases over time
+      rumor_gain: 0.25
+      correction_latency: 0.50
+
+  # Emerging independent media
+  - id: "samizdat_media"
+    kind: media
+    params:
+      fragmentation: 0.80      # Highly diverse
+      amplification_volatility: 0.60
+      rumor_gain: 0.45
+      correction_latency: 0.30
+
+  # Soviet economy in crisis
+  - id: "soviet_economy"
+    kind: market
+    params:
+      scarcity_index: 0.55     # Growing shortages
+      unemployment_pressure: 0.25  # Hidden unemployment
+      volatility: 0.45         # Increasing instability
+      panic_susceptibility: 0.50
+
+  # CPSU reformist wing (Gorbachev faction)
+  - id: "cpsu_reformers"
+    kind: party
+    params:
+      coherence_strength: 0.55
+      recruitment_rate: 0.04
+      propaganda_budget: 0.50
+      legitimacy_pull: 0.45
+      violence_threshold: 0.75  # Reluctant to use force
+
+  # CPSU hardliner wing
+  - id: "cpsu_hardliners"
+    kind: party
+    params:
+      coherence_strength: 0.65
+      recruitment_rate: 0.02
+      propaganda_budget: 0.40
+      legitimacy_pull: 0.30
+      violence_threshold: 0.40  # More willing to use force
+
+  # Baltic nationalist movements
+  - id: "baltic_nationalists"
+    kind: party
+    params:
+      coherence_strength: 0.70
+      recruitment_rate: 0.07
+      propaganda_budget: 0.20
+      legitimacy_pull: 0.65
+      violence_threshold: 0.20  # Mostly peaceful
+
+  # Ukrainian nationalist movement (Rukh)
+  - id: "ukraine_rukh"
+    kind: party
+    params:
+      coherence_strength: 0.50
+      recruitment_rate: 0.05
+      propaganda_budget: 0.15
+      legitimacy_pull: 0.55
+      violence_threshold: 0.25
+
+  # Western influence
+  - id: "western_influence"
+    kind: foreign_actor
+    params:
+      intervention_threshold: 0.80
+      amplification_bias: 0.30  # Supports reform movements
+      destabilization_rate: 0.10
+      disinformation_level: 0.15
+
+bots:
+  enabled: true
+  mode: multi_objective       # Balance multiple goals
+  budget:
+    max_actions_per_step: 40
+    max_edge_weight_delta: 0.12
+
+metrics:
+  track:
+    - cluster_count
+    - largest_cluster_mass
+    - polarization_index
+    - isolation_index
+    - violence_risk_index
+    - legitimacy_index
+    - rumor_r
+    - cascade_risk
+    - type_entropy
+    - activation_spread
+
+rules:
+  invariants:
+    - "no_persuasion"
+    - "no_targeting_individuals"
+    - "topology_only_actions"
+    - "audit_all_actions"
+
+# =============================================================================
+# ANALYSIS NOTES:
+#
+# Key phases to observe:
+# 1. t=0-20: Early reforms, glasnost begins
+# 2. t=20-40: Nationalist movements emerge
+# 3. t=40-60: Economic crisis deepens
+# 4. t=60-78: Collapse or stabilization?
+#
+# Chinese path requirements:
+# - Economic reform WITHOUT political opening (reduce glasnost effect)
+# - Early suppression of nationalist movements
+# - Maintain party legitimacy through economic growth
+# - Manage hardliners without coup
+#
+# Counterfactual interventions:
+# - Delay glasnost, prioritize economic reform
+# - Earlier autonomy concessions to republics
+# - Different handling of Baltic independence movements
+# - Economic aid from West in exchange for stability
+#
+# Success metrics for "Chinese path":
+# - legitimacy_index > 0.35 at end
+# - violence_risk_index < 0.40
+# - No cascade events causing republic secession
+# - cluster_count < 8 (maintain union cohesion)
+# =============================================================================

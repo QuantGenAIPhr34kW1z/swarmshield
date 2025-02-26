@@ -1,0 +1,104 @@
+version: "0.1"
+seed: 19460602
+
+world:
+  dt: 1.0
+  steps: 36
+  topology:
+    kind: graph
+    graph:
+      n: 2200
+      generator: watts_strogatz
+      k: 10
+      beta: 0.20
+
+agents:
+  n: 2200
+  state_model:
+    belief_dim: 4
+    init:
+      kind: clusters
+      clusters:
+        k: 6
+        spread: 0.8
+  dynamics:
+    reinforcement: 0.028
+    decay: 0.014
+    noise: 0.017
+    confirmation_bias: 0.050
+    isolation_sensitivity: 0.060
+    violence_risk_gain: 0.022
+
+institutions:
+  - id: "postwar_state"
+    kind: state
+    params:
+      legitimacy: 0.55
+      policing_friction: 0.12
+      emergency_powers: 0.08
+      trust_floor: 0.25
+
+  - id: "plural_media"
+    kind: media
+    params:
+      fragmentation: 0.55
+      amplification_volatility: 0.30
+      rumor_gain: 0.16
+      correction_latency: 0.55
+
+  - id: "reconstruction_pressure"
+    kind: market
+    params:
+      scarcity_index: 0.55
+      unemployment_pressure: 0.50
+      volatility: 0.45
+      panic_susceptibility: 0.40
+
+  - id: "party_bloc_1"
+    kind: party
+    params:
+      coherence_strength: 0.60
+      recruitment_rate: 0.035
+      propaganda_budget: 0.35
+      legitimacy_pull: 0.60
+      violence_threshold: 0.20
+
+  - id: "party_bloc_2"
+    kind: party
+    params:
+      coherence_strength: 0.58
+      recruitment_rate: 0.033
+      propaganda_budget: 0.33
+      legitimacy_pull: 0.55
+      violence_threshold: 0.22
+
+  - id: "foreign_actor"
+    kind: foreign_actor
+    params:
+      amplification_bias: 0.08
+      rumor_injection_rate: 0.05
+      funding_pressure: 0.10
+
+bots:
+  enabled: true
+  mode: llm_controller
+  budget:
+    max_actions_per_step: 25
+    max_edge_weight_delta: 0.10
+
+metrics:
+  track:
+    - polarization_index
+    - legitimacy_index
+    - coalition_stability
+    - rumor_R
+    - turnout_proxy
+    - violence_risk_index
+
+rules:
+  invariants:
+    - "no_persuasion"
+    - "topology_only_actions"
+    - "audit_all_actions"
+
+

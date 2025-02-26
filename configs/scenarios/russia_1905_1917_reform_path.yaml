@@ -1,0 +1,87 @@
+version: "0.1"
+seed: 19050122
+
+world:
+  dt: 1.0
+  steps: 144                # "months" ~ 12 years
+  topology:
+    kind: graph
+    graph:
+      n: 2500
+      generator: barabasi_albert
+      m: 5
+
+agents:
+  n: 2500
+  state_model:
+    belief_dim: 4
+    init:
+      kind: gaussian
+      gaussian:
+        mean: 0.0
+        std: 1.2
+  dynamics:
+    reinforcement: 0.030
+    decay: 0.010
+    noise: 0.018
+    confirmation_bias: 0.055
+    isolation_sensitivity: 0.080
+    violence_risk_gain: 0.040
+
+institutions:
+  - id: "autocratic_state"
+    kind: state
+    params:
+      legitimacy: 0.30
+      policing_friction: 0.22
+      emergency_powers: 0.30
+      trust_floor: 0.12
+      permeability: 0.05        # low permeability to reform initially
+
+  - id: "reform_institution"
+    kind: state
+    params:
+      legitimacy: 0.10
+      policing_friction: 0.05
+      emergency_powers: 0.00
+      trust_floor: 0.10
+      permeability: 0.35        # increases over time via schedule hooks
+
+  - id: "scarcity_pressure"
+    kind: market
+    params:
+      scarcity_index: 0.65
+      unemployment_pressure: 0.45
+      volatility: 0.40
+      panic_susceptibility: 0.40
+
+  - id: "information_monopoly"
+    kind: media
+    params:
+      fragmentation: 0.20
+      amplification_volatility: 0.25
+      rumor_gain: 0.18
+      correction_latency: 0.85
+
+bots:
+  enabled: true
+  mode: baseline
+  budget:
+    max_actions_per_step: 20
+    max_edge_weight_delta: 0.10
+
+metrics:
+  track:
+    - polarization_index
+    - isolation_index
+    - violence_risk_index
+    - legitimacy_index
+    - reform_permeability
+    - defection_risk
+
+rules:
+  invariants:
+    - "topology_only_actions"
+    - "audit_all_actions"
+    - "no_real_world_playbooks"
+

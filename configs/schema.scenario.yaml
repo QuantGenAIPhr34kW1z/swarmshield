@@ -1,0 +1,101 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "BotSim-Style Scenario Config"
+type: object
+required: [version, seed, world, agents, institutions, bots, metrics, rules]
+properties:
+  version: { type: string }
+  seed: { type: integer, minimum: 0 }
+  world:
+    type: object
+    required: [dt, steps, topology]
+    properties:
+      dt: { type: number, minimum: 0.0001 }
+      steps: { type: integer, minimum: 1 }
+      topology:
+        type: object
+        required: [kind]
+        properties:
+          kind: { type: string, enum: [plane2d, graph] }
+          plane2d:
+            type: object
+            properties:
+              width: { type: number }
+              height: { type: number }
+              neighbor_radius: { type: number, minimum: 0 }
+          graph:
+            type: object
+            properties:
+              n: { type: integer, minimum: 1 }
+              generator: { type: string, enum: [erdos_renyi, barabasi_albert, watts_strogatz] }
+              p: { type: number, minimum: 0, maximum: 1 }
+              m: { type: integer, minimum: 1 }
+              k: { type: integer, minimum: 1 }
+              beta: { type: number, minimum: 0, maximum: 1 }
+  agents:
+    type: object
+    required: [n, state_model]
+    properties:
+      n: { type: integer, minimum: 1 }
+      state_model:
+        type: object
+        required: [belief_dim]
+        properties:
+          belief_dim: { type: integer, minimum: 2 }
+          init:
+            type: object
+            properties:
+              kind: { type: string, enum: [gaussian, clusters] }
+              gaussian:
+                type: object
+                properties:
+                  mean: { type: number }
+                  std: { type: number, minimum: 0 }
+              clusters:
+                type: object
+                properties:
+                  k: { type: integer, minimum: 2 }
+                  spread: { type: number, minimum: 0 }
+      dynamics:
+        type: object
+        properties:
+          reinforcement: { type: number, minimum: 0 }
+          decay: { type: number, minimum: 0 }
+          noise: { type: number, minimum: 0 }
+          confirmation_bias: { type: number, minimum: 0 }
+          isolation_sensitivity: { type: number, minimum: 0 }
+          violence_risk_gain: { type: number, minimum: 0 }
+  institutions:
+    type: array
+    items:
+      type: object
+      required: [id, kind, params]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [party, state, media, market, church, foreign_actor] }
+        params: { type: object }
+  bots:
+    type: object
+    required: [enabled, mode]
+    properties:
+      enabled: { type: boolean }
+      mode: { type: string, enum: [none, baseline, llm_controller] }
+      budget:
+        type: object
+        properties:
+          max_actions_per_step: { type: integer, minimum: 0 }
+          max_edge_weight_delta: { type: number, minimum: 0 }
+  metrics:
+    type: object
+    required: [track]
+    properties:
+      track:
+        type: array
+        items: { type: string }
+  rules:
+    type: object
+    required: [invariants]
+    properties:
+      invariants:
+        type: array
+        items: { type: string }
+

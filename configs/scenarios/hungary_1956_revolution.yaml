@@ -1,0 +1,205 @@
+# =============================================================================
+# Hungary 1956: The Revolution - Peaceful Transition Possible?
+# =============================================================================
+#
+# COUNTERFACTUAL QUESTION:
+#   Was a peaceful transition from Stalinist communism possible in Hungary 1956?
+#
+# HISTORICAL CONTEXT:
+#   - Stalin dies March 1953, Khrushchev's "Secret Speech" February 1956
+#   - Imre Nagy becomes PM (July 1953), removed (April 1955), restored (October 1956)
+#   - October 23, 1956: Student demonstration in Budapest
+#   - October 24-28: Armed resistance, Nagy announces reforms
+#   - November 1: Nagy announces withdrawal from Warsaw Pact
+#   - November 4: Soviet invasion, 2,500+ Hungarians killed
+#   - November 10: Resistance crushed, Kadar installed
+#
+# INTERVENTION HYPOTHESIS:
+#   What if Nagy had NOT announced Warsaw Pact withdrawal?
+#   What if the West had signaled support more clearly?
+#   What if the Soviets had negotiated rather than invaded?
+#   What if protests had remained peaceful longer?
+#
+# BELIEF DIMENSIONS:
+#   0: Support for Communist reform (negative = anti-communist)
+#   1: Desire for Western alignment (positive = pro-West)
+#   2: Willingness to use violence (positive = ready to fight)
+#   3: Trust in Soviet negotiations (positive = trusts Soviets)
+#
+# =============================================================================
+
+version: "0.1"
+seed: 19561023  # October 23, 1956 - Student demonstration begins
+
+world:
+  dt: 1.0
+  steps: 21                    # ~days from October 23 to November 10
+  parallel: true
+  topology:
+    kind: graph
+    graph:
+      n: 2000                  # Hungary ~10M, scaled to Budapest and major cities
+      generator: barabasi_albert  # Power law - some influential nodes (student orgs, factories)
+      m: 4                     # Higher connectivity - revolutionary ferment
+
+agents:
+  n: 2000
+  state_model:
+    belief_dim: 4
+    init:
+      kind: clusters
+      clusters:
+        k: 5                   # Students, workers, intellectuals, party members, AVH
+        spread: 0.8
+  dynamics:
+    reinforcement: 0.045       # High - rapid radicalization
+    decay: 0.005               # Very slow decay during crisis
+    noise: 0.030               # High information chaos
+    confirmation_bias: 0.070   # Strong in-group during conflict
+    isolation_sensitivity: 0.090
+    violence_risk_gain: 0.045  # High - armed conflict occurred
+  types:
+    normal: 0.45
+    stubborn: 0.25             # Committed revolutionaries and AVH loyalists
+    influencer: 0.12           # Student leaders, Nagy, intellectuals
+    contrarian: 0.08           # Those trying to negotiate
+    passive: 0.10              # Citizens avoiding conflict
+
+institutions:
+  # Hungarian State (collapsing)
+  - id: "hungarian_state"
+    kind: state
+    params:
+      legitimacy: 0.25         # Rakosi regime despised
+      policing_friction: 0.45  # AVH brutal but losing control
+      emergency_powers: 0.60   # Still has formal powers
+      trust_floor: 0.05        # Almost no trust
+
+  # Hungarian media (rapidly liberalizing)
+  - id: "hungarian_media"
+    kind: media
+    params:
+      fragmentation: 0.55      # Multiple voices emerging
+      amplification_volatility: 0.70  # Chaotic coverage
+      rumor_gain: 0.50         # Many rumors spreading
+      correction_latency: 0.65  # Hard to verify anything
+
+  # Radio Free Europe
+  - id: "rfe_influence"
+    kind: media
+    params:
+      fragmentation: 0.30
+      amplification_volatility: 0.55
+      rumor_gain: 0.40         # Reports on revolution
+      correction_latency: 0.25
+
+  # Economic crisis
+  - id: "hungarian_economy"
+    kind: market
+    params:
+      scarcity_index: 0.50
+      unemployment_pressure: 0.35
+      volatility: 0.60         # High during revolution
+      panic_susceptibility: 0.55
+
+  # Reform communists (Nagy faction)
+  - id: "nagy_reformers"
+    kind: party
+    params:
+      coherence_strength: 0.45  # Moderate unity
+      recruitment_rate: 0.10    # Growing rapidly
+      propaganda_budget: 0.25
+      legitimacy_pull: 0.70     # High moral authority
+      violence_threshold: 0.30  # Preferred peaceful change
+
+  # Hardline communists (Rakosi/Gero remnants)
+  - id: "stalinist_hardliners"
+    kind: party
+    params:
+      coherence_strength: 0.55
+      recruitment_rate: 0.01    # Collapsing support
+      propaganda_budget: 0.35
+      legitimacy_pull: 0.15
+      violence_threshold: 0.25  # Will use AVH
+
+  # Revolutionary councils/students
+  - id: "revolutionary_councils"
+    kind: party
+    params:
+      coherence_strength: 0.50
+      recruitment_rate: 0.15    # Rapid mobilization
+      propaganda_budget: 0.20
+      legitimacy_pull: 0.65
+      violence_threshold: 0.50  # Armed resistance
+
+  # Soviet Union
+  - id: "soviet_union"
+    kind: foreign_actor
+    params:
+      intervention_threshold: 0.35  # Low - WILL intervene
+      amplification_bias: -0.40     # Opposes revolution
+      destabilization_rate: 0.30    # Supports hardliners
+      disinformation_level: 0.35
+
+  # Western powers (US/UK)
+  - id: "western_powers"
+    kind: foreign_actor
+    params:
+      intervention_threshold: 0.95  # Will NOT intervene (Suez crisis)
+      amplification_bias: 0.35      # Supports revolution rhetorically
+      destabilization_rate: 0.05    # No real action
+      disinformation_level: 0.10
+
+bots:
+  enabled: true
+  mode: cascade_interruptor   # Try to prevent violence cascade
+  budget:
+    max_actions_per_step: 45
+    max_edge_weight_delta: 0.18
+
+metrics:
+  track:
+    - cluster_count
+    - largest_cluster_mass
+    - polarization_index
+    - isolation_index
+    - violence_risk_index
+    - legitimacy_index
+    - rumor_r
+    - cascade_risk
+    - activation_spread
+
+rules:
+  invariants:
+    - "no_persuasion"
+    - "no_targeting_individuals"
+    - "topology_only_actions"
+    - "audit_all_actions"
+
+# =============================================================================
+# ANALYSIS NOTES:
+#
+# Key decision points:
+# 1. t=0-3: Initial protests - stay peaceful?
+# 2. t=4-7: Armed resistance begins - contain it?
+# 3. t=8-12: Nagy government reforms - how far?
+# 4. t=13-18: Warsaw Pact announcement - avoid it?
+# 5. t=19-21: Soviet intervention or negotiation?
+#
+# Peaceful transition requirements:
+# - violence_risk_index stays < 0.50
+# - No cascade events above 15% of population
+# - Nagy maintains legitimacy (legitimacy_index > 0.45)
+# - Soviet intervention_threshold not crossed
+#
+# Counterfactual interventions:
+# - Slower reform pace (don't trigger Soviet red lines)
+# - Maintain some Warsaw Pact commitment
+# - Negotiate directly with Khrushchev
+# - Western signals of non-interference to reassure Soviets
+#
+# Historical comparison:
+# - Poland 1956: Gomulka managed transition peacefully
+# - Why did Hungary escalate when Poland didn't?
+# - Key difference: Armed resistance and Warsaw Pact withdrawal
+# =============================================================================

@@ -1,0 +1,78 @@
+version: "0.1"
+seed: 20240101
+
+world:
+  dt: 1.0
+  steps: 240                # "minutes" of trading day (stylized)
+  topology:
+    kind: graph
+    graph:
+      n: 3000
+      generator: erdos_renyi
+      p: 0.004
+
+agents:
+  n: 3000
+  state_model:
+    belief_dim: 3
+    init:
+      kind: gaussian
+      gaussian:
+        mean: 0.0
+        std: 1.0
+  dynamics:
+    reinforcement: 0.040
+    decay: 0.020
+    noise: 0.030
+    confirmation_bias: 0.045
+    isolation_sensitivity: 0.050
+    violence_risk_gain: 0.000
+
+institutions:
+  - id: "market_microstructure"
+    kind: market
+    params:
+      volatility: 0.70
+      panic_susceptibility: 0.75
+      circuit_breaker: 0.25
+      liquidity_depth: 0.35
+      rumor_price_impact: 0.60
+
+  - id: "algo_amplifier"
+    kind: media
+    params:
+      fragmentation: 0.85
+      amplification_volatility: 0.70
+      rumor_gain: 0.55
+      correction_latency: 0.80
+
+  - id: "malicious_rumor_source"
+    kind: foreign_actor
+    params:
+      rumor_injection_rate: 0.10
+      burst_schedule:
+        at_steps: [30, 45, 46, 60, 120, 121]
+        intensity: [1.0, 1.6, 1.3, 1.2, 1.4, 1.1]
+
+bots:
+  enabled: true
+  mode: baseline
+  budget:
+    max_actions_per_step: 40
+    max_edge_weight_delta: 0.15
+
+metrics:
+  track:
+    - rumor_R
+    - panic_index
+    - liquidity_index
+    - cascade_size
+    - time_to_stability
+
+rules:
+  invariants:
+    - "topology_only_actions"
+    - "audit_all_actions"
+    - "no_financial_advice"
+
+
